@@ -225,6 +225,8 @@ func (z *erasureServerPools) listPath(ctx context.Context, o *listPathOptions) (
 	o.debugln("Raw List", o)
 	filterCh := make(chan metaCacheEntry, o.Limit)
 	listCtx, cancelList := context.WithCancel(ctx)
+	//fix
+	defer cancelList()
 	filteredResults := o.gatherResults(listCtx, filterCh)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -238,7 +240,6 @@ func (z *erasureServerPools) listPath(ctx context.Context, o *listPathOptions) (
 	}(*o)
 
 	entries, err = filteredResults()
-	cancelList()
 	wg.Wait()
 	if listErr != nil && !errors.Is(listErr, context.Canceled) {
 		return entries, listErr
@@ -323,8 +324,8 @@ func (z *erasureServerPools) listMerged(ctx context.Context, o listPathOptions, 
 		// Use NumVersions as a final tiebreaker.
 		return len(oMeta.versions) > len(eMeta.versions)
 	})
-
-	cancelList()
+	//fix
+	//cancelList()
 	wg.Wait()
 	if err != nil {
 		return err
